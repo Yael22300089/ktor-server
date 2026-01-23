@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <title>Formulario de Validaciones</title>
+    <style>
+        body {
+          font-family: Arial, sans-serif;
+          background: linear-gradient(135deg, #667eea, #764ba2);
+          min-height: 100vh;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin: 0;
+        }
+
+        .card {
+          background: #fff;
+          padding: 30px;
+          border-radius: 12px;
+          width: 400px;
+          box-shadow: 0 10px 25px rgba(0,0,0,.2);
+        }
+
+        h2 {
+          text-align: center;
+          margin-bottom: 20px;
+          color: #333;
+        }
+
+        label {
+          font-weight: bold;
+          font-size: 14px;
+        }
+
+        input {
+          width: 100%;
+          padding: 10px;
+          margin: 6px 0 15px 0;
+          border-radius: 6px;
+          border: 1px solid #ccc;
+          font-size: 14px;
+        }
+
+        input:focus {
+          outline: none;
+          border-color: #667eea;
+        }
+
+        button {
+          width: 100%;
+          padding: 12px;
+          border: none;
+          border-radius: 6px;
+          background: #667eea;
+          color: white;
+          font-size: 16px;
+          cursor: pointer;
+          transition: 0.3s;
+        }
+
+        button:hover {
+          background: #5a67d8;
+        }
+
+        .secondary {
+          margin-top: 15px;
+          background: #e53e3e;
+        }
+
+        .secondary:hover {
+          background: #c53030;
+        }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2>Formulario de Prueba</h2>
+
+    <form method="post" action="/enviar">
+
+        <label>Nombre (solo letras)</label>
+        <input type="text" name="nombre" required pattern="[A-Za-záéíóúÁÉÍÓÚ ]+">
+
+        <label>Edad (solo números)</label>
+        <input type="number" name="edad" required>
+
+        <label>Correo electrónico</label>
+        <input type="email" name="correo" required>
+
+        <label>Teléfono (10 dígitos)</label>
+        <input type="text" name="telefono" pattern="\d{10}" required>
+
+        <label>Fecha</label>
+        <input type="date" name="fecha" required>
+
+        <button type="submit">Enviar formulario</button>
+    </form>
+
+    <button class="secondary" onclick="location.href='/ruta-inexistente'">
+        Probar error 404
+    </button>
+</div>
+
+</body>
+</html>
