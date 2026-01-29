@@ -2,166 +2,77 @@
 <html lang="es">
 <head>
     <meta charset="utf-8">
-    <title>Formulario con Carrusel</title>
-
-    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+    <title>Formulario con Carrusel de Fondo</title>
 
     <style>
         body {
             font-family: Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea, #764ba2);
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
             margin: 0;
+            background-size: cover;
+            background-position: center;
+            transition: background-image 1s ease-in-out;
         }
 
         .card {
-            background: #fff;
+            background: rgba(255,255,255,.9);
             padding: 30px;
             border-radius: 12px;
             width: 420px;
-            box-shadow: 0 10px 25px rgba(0,0,0,.2);
         }
 
-        h2 { text-align: center; }
-
-        label { font-weight: bold; }
-
-        input {
+        input, button {
             width: 100%;
             padding: 10px;
             margin-bottom: 12px;
-        }
-
-        button {
-            width: 100%;
-            padding: 12px;
-            background: #667eea;
-            color: white;
-            border: none;
-            cursor: pointer;
-        }
-
-        /* 🎠 Carrusel */
-        .carousel {
-            position: relative;
-            width: 100%;
-            height: 200px;
-            overflow: hidden;
-            border-radius: 10px;
-            margin-bottom: 15px;
-            background: #eee;
-        }
-
-        .carousel img {
-            width: 100%;
-            height: 200px;
-            object-fit: cover;
-            display: none;
-        }
-
-        .carousel img.active {
-            display: block;
-        }
-
-        .controls {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 10px;
-        }
-
-        .controls button {
-            width: 48%;
-            background: #764ba2;
         }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <h2>Formulario de Prueba</h2>
+    <h2>Formulario</h2>
 
     <form method="post" action="/enviar" enctype="multipart/form-data">
-
-        <label>Nombre</label>
-        <input name="nombre" required>
-
-        <label>Edad</label>
-        <input name="edad" required>
-
-        <label>Correo</label>
-        <input name="correo" required>
-
-        <label>Teléfono</label>
-        <input name="telefono" required>
-
-        <label>Fecha</label>
+        <input name="nombre" placeholder="Nombre" required>
+        <input name="edad" placeholder="Edad" required>
+        <input name="correo" placeholder="Correo" required>
+        <input name="telefono" placeholder="Teléfono" required>
         <input type="date" name="fecha" required>
 
-        <!-- 📸 Subir imágenes -->
         <label>Subir imágenes</label>
-        <input type="file" multiple accept="image/*" id="imagenes">
+        <input type="file" name="imagenes" id="imagenes" multiple accept="image/*">
 
-        <!-- 🎠 Carrusel -->
-        <div class="carousel" id="carousel"></div>
-
-        <div class="controls">
-            <button type="button" onclick="prev()">⬅ Anterior</button>
-            <button type="button" onclick="next()">Siguiente ➡</button>
-        </div>
-
-        <!-- 🔐 reCAPTCHA -->
-        <div class="g-recaptcha"
-             data-sitekey="6LfKmVksAAAAAMcJpFnwcm0dX79e5GZZ_FkElcDj"></div>
-
-        <br>
         <button type="submit">Enviar</button>
     </form>
 </div>
 
 <script>
-    const input = document.getElementById('imagenes');
-    const carousel = document.getElementById('carousel');
-    let images = [];
+    const input = document.getElementById("imagenes");
+    let fondos = [];
     let index = 0;
 
-    input.addEventListener('change', () => {
-        carousel.innerHTML = '';
-        images = [];
-
-        [...input.files].forEach((file, i) => {
+    input.addEventListener("change", () => {
+        fondos = [];
+        [...input.files].forEach(file => {
             const reader = new FileReader();
-            reader.onload = e => {
-                const img = document.createElement('img');
-                img.src = e.target.result;
-                if (i === 0) img.classList.add('active');
-                carousel.appendChild(img);
-                images.push(img);
-            };
+            reader.onload = e => fondos.push(e.target.result);
             reader.readAsDataURL(file);
         });
 
-        index = 0;
+        setTimeout(() => {
+            if (fondos.length) {
+                document.body.style.backgroundImage = `url(${fondos[0]})`;
+                setInterval(() => {
+                    index = (index + 1) % fondos.length;
+                    document.body.style.backgroundImage = `url(${fondos[index]})`;
+                }, 4000);
+            }
+        }, 500);
     });
-
-    function showImage(i) {
-        images.forEach(img => img.classList.remove('active'));
-        images[i].classList.add('active');
-    }
-
-    function next() {
-        if (!images.length) return;
-        index = (index + 1) % images.length;
-        showImage(index);
-    }
-
-    function prev() {
-        if (!images.length) return;
-        index = (index - 1 + images.length) % images.length;
-        showImage(index);
-    }
 </script>
 
 </body>

@@ -5,11 +5,10 @@ import io.ktor.server.routing.*
 import io.ktor.server.response.*
 import io.ktor.server.request.*
 import io.ktor.http.*
-import io.ktor.client.*
-import io.ktor.client.engine.cio.*
-import io.ktor.client.request.*
-import io.ktor.client.statement.*
+import io.ktor.http.content.*
+import java.io.File
 import java.time.LocalDate
+import java.util.*
 
 fun Route.formRoutes() {
 
@@ -22,79 +21,31 @@ fun Route.formRoutes() {
     }
 
     post("/enviar") {
-        val params = call.receiveParameters()
 
-        // 🔐 reCAPTCHA token
-        val recaptchaToken = params["g-recaptcha-response"]
+        val multipart = call.receiveMultipart()
+        val uploadDir = File("src/main/resources/static/uploads")
+        if (!uploadDir.exists()) uploadDir.mkdirs()
 
-        if (recaptchaToken.isNullOrBlank() || !validarRecaptcha(recaptchaToken)) {
-            call.respondText(
-                "❌ reCAPTCHA inválido",
-                ContentType.Text.Html,
-                HttpStatusCode.Forbidden
-            )
-            return@post
+        multipart.forEachPart { part ->
+
+            if (part is PartData.FileItem) {
+                val ext = part.originalFileName?.substringAfterLast('.') ?: "jpg"
+                val fileName = "${UUID.randomUUID()}.$ext"
+                val file = File(uploadDir, fileName)
+
+                part.streamProvider().use { input ->
+                    file.outputStream().use { output ->
+                        input.copyTo(output)
+                    }
+                }
+            }
+
+            part.dispose()
         }
 
-        val nombre = params["nombre"] ?: ""
-        val edad = params["edad"] ?: ""
-        val correo = params["correo"] ?: ""
-        val telefono = params["telefono"] ?: ""
-        val fecha = params["fecha"] ?: ""
-
-        val errores = mutableListOf<String>()
-
-        if (!nombre.matches(Regex("^[a-zA-ZáéíóúÁÉÍÓÚ ]+$")))
-            errores.add("El nombre solo debe contener letras")
-
-        if (!edad.matches(Regex("^\\d+$")))
-            errores.add("La edad solo debe contener números")
-
-        if (!correo.matches(Regex("^[A-Za-z0-9+_.-]+@(.+)$")))
-            errores.add("Correo inválido")
-
-        if (!telefono.matches(Regex("^\\d{10}$")))
-            errores.add("El teléfono debe tener 10 dígitos")
-
-        try {
-            LocalDate.parse(fecha)
-        } catch (e: Exception) {
-            errores.add("Fecha inválida")
-        }
-
-        if (errores.isNotEmpty()) {
-            call.respondText(
-                errores.joinToString("<br>"),
-                ContentType.Text.Html
-            )
-        } else {
-            call.respondText(
-                this::class.java.getResource("/result.html")?.readText()
-                    ?: "OK",
-                ContentType.Text.Html
-            )
-        }
-    }
-}
-
-suspend fun validarRecaptcha(token: String): Boolean {
-    val secret = System.getenv("RECAPTCHA_SECRET")
-        ?: "6LfKmVksAAAAACZhpCNc1vOFvIkq1TK7UvJEKXNU"
-
-    val client = HttpClient(CIO)
-
-    val response = client.post("https://www.google.com/recaptcha/api/siteverify") {
-        contentType(ContentType.Application.FormUrlEncoded)
-        setBody(
-            listOf(
-                "secret" to secret,
-                "response" to token
-            ).formUrlEncode()
+        call.respondText(
+            this::class.java.getResource("/result.html")?.readText() ?: "OK",
+            ContentType.Text.Html
         )
     }
-
-    val body = response.bodyAsText()
-    client.close()
-
-    return body.contains("\"success\": true")
 }

@@ -7,16 +7,14 @@ import io.ktor.server.routing.*
 import io.ktor.server.response.*
 import io.ktor.server.plugins.statuspages.*
 import io.ktor.http.*
+import io.ktor.server.http.content.*
 
 fun main() {
 
     val port = System.getenv("PORT")?.toIntOrNull() ?: 8080
 
-    embeddedServer(
-        Netty,
-        port = port,
-        host = "0.0.0.0"
-    ) {
+    embeddedServer(Netty, port = port, host = "0.0.0.0") {
+
         install(StatusPages) {
             status(HttpStatusCode.NotFound) { call, _ ->
                 call.respondRedirect("/404")
@@ -24,11 +22,14 @@ fun main() {
         }
 
         routing {
+
+            static("/static") {
+                resources("static")
+            }
+
             get("/404") {
                 call.respondText(
-                    this::class.java
-                        .getResource("/error404.html")
-                        ?.readText() ?: "404",
+                    this::class.java.getResource("/error404.html")?.readText() ?: "404",
                     ContentType.Text.Html
                 )
             }
