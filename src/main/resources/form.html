@@ -2,23 +2,25 @@
 <html lang="es">
 <head>
     <meta charset="utf-8">
-    <title>Formulario con Carrusel de Fondo</title>
+    <title>Formulario con Carrusel</title>
+
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 
     <style>
         body {
             font-family: Arial, sans-serif;
             min-height: 100vh;
+            margin: 0;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin: 0;
             background-size: cover;
             background-position: center;
             transition: background-image 1s ease-in-out;
         }
 
         .card {
-            background: rgba(255,255,255,.9);
+            background: rgba(255,255,255,.92);
             padding: 30px;
             border-radius: 12px;
             width: 420px;
@@ -29,6 +31,13 @@
             padding: 10px;
             margin-bottom: 12px;
         }
+
+        button {
+            background: #667eea;
+            border: none;
+            color: white;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -37,6 +46,7 @@
     <h2>Formulario</h2>
 
     <form method="post" action="/enviar" enctype="multipart/form-data">
+
         <input name="nombre" placeholder="Nombre" required>
         <input name="edad" placeholder="Edad" required>
         <input name="correo" placeholder="Correo" required>
@@ -44,7 +54,11 @@
         <input type="date" name="fecha" required>
 
         <label>Subir imágenes</label>
-        <input type="file" name="imagenes" id="imagenes" multiple accept="image/*">
+        <input type="file" id="imagenes" name="imagenes" multiple accept="image/*">
+
+        <!-- 🔐 reCAPTCHA -->
+        <div class="g-recaptcha"
+             data-sitekey="TU_SITE_KEY_AQUI"></div>
 
         <button type="submit">Enviar</button>
     </form>
@@ -57,6 +71,8 @@
 
     input.addEventListener("change", () => {
         fondos = [];
+        index = 0;
+
         [...input.files].forEach(file => {
             const reader = new FileReader();
             reader.onload = e => fondos.push(e.target.result);
@@ -64,8 +80,9 @@
         });
 
         setTimeout(() => {
-            if (fondos.length) {
+            if (fondos.length > 0) {
                 document.body.style.backgroundImage = `url(${fondos[0]})`;
+
                 setInterval(() => {
                     index = (index + 1) % fondos.length;
                     document.body.style.backgroundImage = `url(${fondos[index]})`;

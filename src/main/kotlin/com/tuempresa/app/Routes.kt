@@ -6,6 +6,10 @@ import io.ktor.server.response.*
 import io.ktor.server.request.*
 import io.ktor.http.*
 import io.ktor.http.content.*
+import io.ktor.client.*
+import io.ktor.client.engine.cio.*
+import io.ktor.client.request.*
+import io.ktor.client.statement.*
 import java.io.File
 import java.time.LocalDate
 import java.util.*
@@ -22,25 +26,51 @@ fun Route.formRoutes() {
 
     post("/enviar") {
 
-        val multipart = call.receiveMultipart()
         val uploadDir = File("src/main/resources/static/uploads")
         if (!uploadDir.exists()) uploadDir.mkdirs()
 
+        var recaptchaToken = ""
+
+        val multipart = call.receiveMultipart()
+
         multipart.forEachPart { part ->
 
-            if (part is PartData.FileItem) {
-                val ext = part.originalFileName?.substringAfterLast('.') ?: "jpg"
-                val fileName = "${UUID.randomUUID()}.$ext"
-                val file = File(uploadDir, fileName)
+            when (part) {
 
-                part.streamProvider().use { input ->
-                    file.outputStream().use { output ->
-                        input.copyTo(output)
+                is PartData.FormItem -> {
+                    if (part.name == "g-recaptcha-response") {
+                        recaptchaToken = part.value
                     }
                 }
+
+                is PartData.FileItem -> {
+                    if (part.name == "imagenes") {
+                        val ext = part.originalFileName?.substringAfterLast('.') ?: "jpg"
+                        val fileName = "${UUID.randomUUID()}.$ext"
+                        val file = File(uploadDir, fileName)
+
+                        part.streamProvider().use { input ->
+                            file.outputStream().use { output ->
+                                input.copyTo(output)
+                            }
+                        }
+                    }
+                }
+
+                else -> {}
             }
 
             part.dispose()
+        }
+
+        // 🔐 Validar reCAPTCHA
+        if (recaptchaToken.isBlank() || !validarRecaptcha(recaptchaToken)) {
+            call.respondText(
+                "❌ reCAPTCHA inválido",
+                ContentType.Text.Html,
+                HttpStatusCode.Forbidden
+            )
+            return@post
         }
 
         call.respondText(
@@ -48,4 +78,29 @@ fun Route.formRoutes() {
             ContentType.Text.Html
         )
     }
+}
+
+suspend fun validarRecaptcha(token: String): Boolean {
+
+    val secret = System.getenv("RECAPTCHA_SECRET")
+        ?: "TU_SECRET_KEY_AQUI"
+
+    val client = HttpClient(CIO)
+
+    val response = client.post("https://www.google.com/recaptcha/api/siteverify") {
+        setBody(
+            listOf(
+                "secret" to secret,
+                "response" to token
+            ).formUrlEncode()
+        )
+        headers {
+            append(HttpHeaders.ContentType, ContentType.Application.FormUrlEncoded.toString())
+        }
+    }
+
+    val body = response.bodyAsText()
+    client.close()
+
+    return body.contains("\"success\": true")
 }
