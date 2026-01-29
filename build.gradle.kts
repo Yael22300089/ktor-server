@@ -14,29 +14,19 @@ repositories {
     mavenCentral()
 }
 
+val ktorVersion = "2.3.7"
+
 dependencies {
-    implementation("io.ktor:ktor-server-core-jvm:2.3.7")
-    implementation("io.ktor:ktor-server-netty-jvm:2.3.7")
-    implementation("io.ktor:ktor-server-status-pages-jvm:2.3.7")
+
+    // Ktor Server
+    implementation("io.ktor:ktor-server-core-jvm:$ktorVersion")
+    implementation("io.ktor:ktor-server-netty-jvm:$ktorVersion")
+    implementation("io.ktor:ktor-server-status-pages-jvm:$ktorVersion")
+
+    // Ktor Client
+    implementation("io.ktor:ktor-client-core-jvm:$ktorVersion")
+    implementation("io.ktor:ktor-client-cio-jvm:$ktorVersion")
+
+    // Logging
+    implementation("ch.qos.logback:logback-classic:1.4.14")
 }
-
-
-//
-//plugins {
-//    kotlin("jvm") version "1.9.22"
-//    application
-//}
-//
-//application {
-//    mainClass.set("com.tuempresa.app.ApplicationKt")
-//}
-//
-//dependencies {
-//    implementation("io.ktor:ktor-server-core-jvm:2.3.7")
-//    implementation("io.ktor:ktor-server-netty-jvm:2.3.7")
-//    implementation("io.ktor:ktor-server-status-pages-jvm:2.3.7")
-//
-//    // Logger (evita warnings)
-//    implementation("ch.qos.logback:logback-classic:1.4.14")
-//}
-

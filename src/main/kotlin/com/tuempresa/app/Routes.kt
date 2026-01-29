@@ -5,21 +5,36 @@ import io.ktor.server.routing.*
 import io.ktor.server.response.*
 import io.ktor.server.request.*
 import io.ktor.http.*
+import io.ktor.client.*
+import io.ktor.client.engine.cio.*
+import io.ktor.client.request.*
+import io.ktor.client.statement.*
 import java.time.LocalDate
 
 fun Route.formRoutes() {
 
     get("/") {
         call.respondText(
-            this::class.java
-                .getResource("/form.html")
-                ?.readText() ?: "Formulario no encontrado",
+            this::class.java.getResource("/form.html")?.readText()
+                ?: "Formulario no encontrado",
             ContentType.Text.Html
         )
     }
 
     post("/enviar") {
         val params = call.receiveParameters()
+
+        // 🔐 reCAPTCHA token
+        val recaptchaToken = params["g-recaptcha-response"]
+
+        if (recaptchaToken.isNullOrBlank() || !validarRecaptcha(recaptchaToken)) {
+            call.respondText(
+                "❌ reCAPTCHA inválido",
+                ContentType.Text.Html,
+                HttpStatusCode.Forbidden
+            )
+            return@post
+        }
 
         val nombre = params["nombre"] ?: ""
         val edad = params["edad"] ?: ""
@@ -54,11 +69,32 @@ fun Route.formRoutes() {
             )
         } else {
             call.respondText(
-                this::class.java
-                    .getResource("/result.html")
-                    ?.readText() ?: "OK",
+                this::class.java.getResource("/result.html")?.readText()
+                    ?: "OK",
                 ContentType.Text.Html
             )
         }
     }
+}
+
+suspend fun validarRecaptcha(token: String): Boolean {
+    val secret = System.getenv("RECAPTCHA_SECRET")
+        ?: "6LfKmVksAAAAACZhpCNc1vOFvIkq1TK7UvJEKXNU"
+
+    val client = HttpClient(CIO)
+
+    val response = client.post("https://www.google.com/recaptcha/api/siteverify") {
+        contentType(ContentType.Application.FormUrlEncoded)
+        setBody(
+            listOf(
+                "secret" to secret,
+                "response" to token
+            ).formUrlEncode()
+        )
+    }
+
+    val body = response.bodyAsText()
+    client.close()
+
+    return body.contains("\"success\": true")
 }

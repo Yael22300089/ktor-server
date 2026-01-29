@@ -10,15 +10,13 @@ import io.ktor.http.*
 
 fun main() {
 
-    // Railway asigna el puerto en la variable PORT
-    val port = System.getenv("PORT")?.toIntOrNull() ?: 8080 
+    val port = System.getenv("PORT")?.toIntOrNull() ?: 8080
 
     embeddedServer(
         Netty,
         port = port,
         host = "0.0.0.0"
     ) {
-
         install(StatusPages) {
             status(HttpStatusCode.NotFound) { call, _ ->
                 call.respondRedirect("/404")
