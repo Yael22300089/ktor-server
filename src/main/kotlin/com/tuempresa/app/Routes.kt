@@ -15,37 +15,34 @@ import java.util.*
 
 fun Route.formRoutes() {
 
-    // 👉 carpeta REAL
-    val uploadDir = File("src/main/resources/static.uploads")
+    val uploadDir = File("src/main/resources/static/uploads")
     if (!uploadDir.exists()) uploadDir.mkdirs()
 
     // 🟢 Formulario
     get("/") {
         call.respondText(
-            this::class.java.getResource("/form.html")?.readText()
-                ?: "Formulario no encontrado",
+            this::class.java.getResource("/form.html")!!.readText(),
             ContentType.Text.Html
         )
     }
 
-    // 🟢 Listar imágenes guardadas (para el carrusel)
+    // 🟢 Listar imágenes para carrusel
     get("/imagenes") {
         val images = uploadDir.listFiles()
             ?.filter { it.extension.lowercase() in listOf("jpg", "jpeg", "png", "webp") }
-            ?.map { "/static.uploads/${it.name}" }
+            ?.map { "/uploads/${it.name}" }
             ?: emptyList()
 
         call.respond(images)
     }
 
-    // 🟢 Envío del formulario
+    // 🟢 Enviar formulario
     post("/enviar") {
 
         var recaptchaToken = ""
         val multipart = call.receiveMultipart()
 
         multipart.forEachPart { part ->
-
             when (part) {
 
                 is PartData.FormItem -> {
@@ -56,9 +53,7 @@ fun Route.formRoutes() {
 
                 is PartData.FileItem -> {
                     if (part.name == "imagenes") {
-                        val ext = part.originalFileName
-                            ?.substringAfterLast('.') ?: "jpg"
-
+                        val ext = part.originalFileName?.substringAfterLast('.') ?: "jpg"
                         val fileName = "${UUID.randomUUID()}.$ext"
                         val file = File(uploadDir, fileName)
 
@@ -72,21 +67,17 @@ fun Route.formRoutes() {
 
                 else -> {}
             }
-
             part.dispose()
         }
 
-        // 🔐 reCAPTCHA (NO MODIFICADO)
+        // 🔐 reCAPTCHA (IGUAL)
         if (recaptchaToken.isBlank() || !validarRecaptcha(recaptchaToken)) {
-            call.respondText(
-                "❌ reCAPTCHA inválido",
-                ContentType.Text.Html,
-                HttpStatusCode.Forbidden
-            )
+            call.respondText("❌ reCAPTCHA inválido", status = HttpStatusCode.Forbidden)
             return@post
         }
 
-        call.respondRedirect("/")
+        // ⬅️ NO REDIRIGE, devuelve OK
+        call.respondText("OK")
     }
 }
 

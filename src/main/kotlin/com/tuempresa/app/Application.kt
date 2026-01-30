@@ -23,9 +23,10 @@ fun main() {
 
         routing {
 
-            // 👉 carpeta EXACTA: static.uploads
-            static("/static.uploads") {
-                resources("static.uploads")
+            // 🔥 SERVIR IMÁGENES SUBIDAS
+            static("/uploads") {
+                resources("static/uploads")
+                files("src/main/resources/static/uploads")
             }
 
             get("/404") {

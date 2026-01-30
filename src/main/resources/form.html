@@ -2,65 +2,60 @@
 <html lang="es">
 <head>
     <meta charset="utf-8">
-    <title>Formulario con Carrusel Persistente</title>
+    <title>Formulario con Carrusel</title>
 
     <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 
     <style>
         body {
-            font-family: Arial, sans-serif;
-            min-height: 100vh;
-            margin: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background-size: cover;
-            background-position: center;
-            transition: background-image 1s ease-in-out;
+          margin: 0;
+          min-height: 100vh;
+          background-size: cover;
+          background-position: center;
+          transition: background-image 1s;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-family: Arial;
         }
 
         .card {
-            background: rgba(255,255,255,.92);
-            padding: 30px;
-            border-radius: 12px;
-            width: 420px;
+          background: rgba(255,255,255,.95);
+          padding: 30px;
+          border-radius: 12px;
+          width: 420px;
         }
 
-        input, button {
-            width: 100%;
-            padding: 10px;
-            margin-bottom: 12px;
-        }
-
-        button {
-            background: #667eea;
-            border: none;
-            color: white;
-            cursor: pointer;
+        #mensaje {
+          display: none;
+          background: #38a169;
+          color: white;
+          padding: 10px;
+          border-radius: 6px;
+          margin-bottom: 10px;
+          text-align: center;
         }
     </style>
 </head>
+
 <body>
 
 <div class="card">
-    <h2>Formulario</h2>
+    <div id="mensaje">✅ Formulario enviado correctamente</div>
 
-    <form method="post" action="/enviar" enctype="multipart/form-data">
-
+    <form id="form" enctype="multipart/form-data">
         <input name="nombre" placeholder="Nombre" required>
         <input name="edad" placeholder="Edad" required>
         <input name="correo" placeholder="Correo" required>
         <input name="telefono" placeholder="Teléfono" required>
         <input type="date" name="fecha" required>
 
-        <label>Subir imágenes</label>
         <input type="file" name="imagenes" multiple accept="image/*">
 
-        <!-- 🔐 reCAPTCHA (SIN CAMBIOS) -->
         <div class="g-recaptcha"
              data-sitekey="6LcBlFksAAAAAPxIOh_Fsb4drTvSjvQ2Fcs4ZIly"></div>
 
-        <button type="submit">Enviar</button>
+        <button>Enviar</button>
     </form>
 </div>
 
@@ -68,24 +63,37 @@
     let fondos = [];
     let index = 0;
 
-    // 🔄 cargar imágenes guardadas
+    // cargar imágenes guardadas
     fetch('/imagenes')
-        .then(res => res.json())
-        .then(data => {
-            fondos = data;
-            iniciarCarrusel();
-        });
+      .then(r => r.json())
+      .then(data => {
+        fondos = data;
+        iniciar();
+      });
 
-    function iniciarCarrusel() {
-        if (!fondos.length) return;
-
-        document.body.style.backgroundImage = `url(${fondos[0]})`;
-
-        setInterval(() => {
-            index = (index + 1) % fondos.length;
-            document.body.style.backgroundImage = `url(${fondos[index]})`;
-        }, 4000);
+    function iniciar() {
+      if (!fondos.length) return;
+      document.body.style.backgroundImage = `url(${fondos[0]})`;
+      setInterval(() => {
+        index = (index + 1) % fondos.length;
+        document.body.style.backgroundImage = `url(${fondos[index]})`;
+      }, 4000);
     }
+
+    // enviar sin recargar
+    document.getElementById("form").addEventListener("submit", async e => {
+      e.preventDefault();
+      const res = await fetch("/enviar", {
+        method: "POST",
+        body: new FormData(e.target)
+      });
+
+      if (res.ok) {
+        document.getElementById("mensaje").style.display = "block";
+        e.target.reset();
+        setTimeout(() => location.reload(), 1500);
+      }
+    });
 </script>
 
 </body>
