@@ -15,7 +15,8 @@ import java.util.*
 
 fun Route.formRoutes() {
 
-    val uploadDir = File("src/main/resources/static/uploads")
+    // 👉 carpeta REAL
+    val uploadDir = File("src/main/resources/static.uploads")
     if (!uploadDir.exists()) uploadDir.mkdirs()
 
     // 🟢 Formulario
@@ -27,23 +28,24 @@ fun Route.formRoutes() {
         )
     }
 
-    // 🟢 Endpoint para listar imágenes del carrusel
+    // 🟢 Listar imágenes guardadas (para el carrusel)
     get("/imagenes") {
         val images = uploadDir.listFiles()
-            ?.filter { it.extension.lowercase() in listOf("jpg", "png", "jpeg", "webp") }
-            ?.map { "/static/uploads/${it.name}" }
+            ?.filter { it.extension.lowercase() in listOf("jpg", "jpeg", "png", "webp") }
+            ?.map { "/static.uploads/${it.name}" }
             ?: emptyList()
 
         call.respond(images)
     }
 
-    // 🟢 Envío del formulario + reCAPTCHA + subida
+    // 🟢 Envío del formulario
     post("/enviar") {
 
         var recaptchaToken = ""
         val multipart = call.receiveMultipart()
 
         multipart.forEachPart { part ->
+
             when (part) {
 
                 is PartData.FormItem -> {
@@ -70,6 +72,7 @@ fun Route.formRoutes() {
 
                 else -> {}
             }
+
             part.dispose()
         }
 
