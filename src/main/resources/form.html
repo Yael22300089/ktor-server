@@ -33,11 +33,6 @@
           z-index: 2;
         }
 
-        h2 {
-          margin-top: 0;
-          text-align: center;
-        }
-
         input, button {
           width: 100%;
           padding: 12px;
@@ -51,11 +46,6 @@
           color: white;
           border: none;
           cursor: pointer;
-          font-size: 16px;
-        }
-
-        button:hover {
-          opacity: .9;
         }
 
         #mensaje {
@@ -86,7 +76,7 @@
         <input name="telefono" placeholder="Teléfono" required>
         <input type="date" name="fecha" required>
 
-        <input type="file" name="imagenes" multiple accept="image/*">
+        <input type="file" id="imagenes" name="imagenes" multiple accept="image/*">
 
         <button>Enviar</button>
     </form>
@@ -95,8 +85,24 @@
 <script>
     let fondos = [];
     let index = 0;
+    let intervalo = null;
 
-    // 🔄 cargar imágenes del servidor
+    /* 🔁 carrusel */
+    function iniciarCarrusel() {
+      if (!fondos.length) return;
+
+      if (intervalo) clearInterval(intervalo);
+
+      document.body.style.backgroundImage = `url(${fondos[0]})`;
+      index = 0;
+
+      intervalo = setInterval(() => {
+        index = (index + 1) % fondos.length;
+        document.body.style.backgroundImage = `url(${fondos[index]})`;
+      }, 4000);
+    }
+
+    /* ✅ 1. IMÁGENES YA GUARDADAS */
     fetch('/imagenes')
       .then(r => r.json())
       .then(data => {
@@ -104,17 +110,20 @@
         iniciarCarrusel();
       });
 
-    function iniciarCarrusel() {
-      if (!fondos.length) return;
-      document.body.style.backgroundImage = `url(${fondos[0]})`;
+    /* ✅ 2. VISTA PREVIA AL SELECCIONAR */
+    document.getElementById("imagenes").addEventListener("change", e => {
+      fondos = [];
+      [...e.target.files].forEach(file => {
+        const reader = new FileReader();
+        reader.onload = ev => {
+          fondos.push(ev.target.result);
+          iniciarCarrusel();
+        };
+        reader.readAsDataURL(file);
+      });
+    });
 
-      setInterval(() => {
-        index = (index + 1) % fondos.length;
-        document.body.style.backgroundImage = `url(${fondos[index]})`;
-      }, 4000);
-    }
-
-    // 🚀 enviar formulario sin recargar
+    /* 🚀 enviar */
     document.getElementById("form").addEventListener("submit", async e => {
       e.preventDefault();
 
@@ -125,7 +134,6 @@
 
       if (res.ok) {
         document.getElementById("mensaje").style.display = "block";
-        e.target.reset();
         setTimeout(() => location.reload(), 1500);
       }
     });
