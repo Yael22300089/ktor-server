@@ -2,9 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="utf-8">
-    <title>Formulario con Carrusel</title>
-
-    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+    <title>Formulario Moderno</title>
 
     <style>
         body {
@@ -12,18 +10,52 @@
           min-height: 100vh;
           background-size: cover;
           background-position: center;
-          transition: background-image 1s;
+          transition: background-image 1s ease-in-out;
+          font-family: 'Segoe UI', sans-serif;
           display: flex;
           align-items: center;
           justify-content: center;
-          font-family: Arial;
+        }
+
+        .overlay {
+          background: rgba(0,0,0,.55);
+          position: absolute;
+          inset: 0;
         }
 
         .card {
-          background: rgba(255,255,255,.95);
-          padding: 30px;
-          border-radius: 12px;
+          position: relative;
+          background: white;
+          padding: 35px;
+          border-radius: 16px;
           width: 420px;
+          box-shadow: 0 20px 40px rgba(0,0,0,.25);
+          z-index: 2;
+        }
+
+        h2 {
+          margin-top: 0;
+          text-align: center;
+        }
+
+        input, button {
+          width: 100%;
+          padding: 12px;
+          margin-bottom: 12px;
+          border-radius: 8px;
+          border: 1px solid #ccc;
+        }
+
+        button {
+          background: linear-gradient(135deg,#667eea,#764ba2);
+          color: white;
+          border: none;
+          cursor: pointer;
+          font-size: 16px;
+        }
+
+        button:hover {
+          opacity: .9;
         }
 
         #mensaje {
@@ -31,8 +63,8 @@
           background: #38a169;
           color: white;
           padding: 10px;
-          border-radius: 6px;
-          margin-bottom: 10px;
+          border-radius: 8px;
+          margin-bottom: 12px;
           text-align: center;
         }
     </style>
@@ -40,8 +72,12 @@
 
 <body>
 
+<div class="overlay"></div>
+
 <div class="card">
-    <div id="mensaje">✅ Formulario enviado correctamente</div>
+    <h2>Registro</h2>
+
+    <div id="mensaje">✅ Formulario enviado</div>
 
     <form id="form" enctype="multipart/form-data">
         <input name="nombre" placeholder="Nombre" required>
@@ -52,9 +88,6 @@
 
         <input type="file" name="imagenes" multiple accept="image/*">
 
-        <div class="g-recaptcha"
-             data-sitekey="6LcBlFksAAAAAPxIOh_Fsb4drTvSjvQ2Fcs4ZIly"></div>
-
         <button>Enviar</button>
     </form>
 </div>
@@ -63,26 +96,28 @@
     let fondos = [];
     let index = 0;
 
-    // cargar imágenes guardadas
+    // 🔄 cargar imágenes del servidor
     fetch('/imagenes')
       .then(r => r.json())
       .then(data => {
         fondos = data;
-        iniciar();
+        iniciarCarrusel();
       });
 
-    function iniciar() {
+    function iniciarCarrusel() {
       if (!fondos.length) return;
       document.body.style.backgroundImage = `url(${fondos[0]})`;
+
       setInterval(() => {
         index = (index + 1) % fondos.length;
         document.body.style.backgroundImage = `url(${fondos[index]})`;
       }, 4000);
     }
 
-    // enviar sin recargar
+    // 🚀 enviar formulario sin recargar
     document.getElementById("form").addEventListener("submit", async e => {
       e.preventDefault();
+
       const res = await fetch("/enviar", {
         method: "POST",
         body: new FormData(e.target)

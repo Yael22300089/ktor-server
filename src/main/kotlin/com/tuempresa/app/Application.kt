@@ -24,16 +24,13 @@ fun main() {
 
         routing {
 
-            // ✅ SERVIR CARPETA REAL (NO resources)
+            // 📂 carpeta REAL donde se guardan imágenes
             static("/uploads") {
                 files(File("uploads"))
             }
 
             get("/404") {
-                call.respondText(
-                    this::class.java.getResource("/error404.html")?.readText() ?: "404",
-                    ContentType.Text.Html
-                )
+                call.respondText("404", ContentType.Text.Html)
             }
 
             formRoutes()
