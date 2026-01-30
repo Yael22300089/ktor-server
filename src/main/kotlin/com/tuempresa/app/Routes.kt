@@ -15,10 +15,10 @@ import java.util.*
 
 fun Route.formRoutes() {
 
-    val uploadDir = File("src/main/resources/static/uploads")
+    // ✅ carpeta REAL y persistente
+    val uploadDir = File("uploads")
     if (!uploadDir.exists()) uploadDir.mkdirs()
 
-    // 🟢 Formulario
     get("/") {
         call.respondText(
             this::class.java.getResource("/form.html")!!.readText(),
@@ -26,7 +26,7 @@ fun Route.formRoutes() {
         )
     }
 
-    // 🟢 Listar imágenes para carrusel
+    // ✅ JSON correcto
     get("/imagenes") {
         val images = uploadDir.listFiles()
             ?.filter { it.extension.lowercase() in listOf("jpg", "jpeg", "png", "webp") }
@@ -36,13 +36,13 @@ fun Route.formRoutes() {
         call.respond(images)
     }
 
-    // 🟢 Enviar formulario
     post("/enviar") {
 
         var recaptchaToken = ""
-        val multipart = call.receiveMultipart()
 
+        val multipart = call.receiveMultipart()
         multipart.forEachPart { part ->
+
             when (part) {
 
                 is PartData.FormItem -> {
@@ -53,9 +53,11 @@ fun Route.formRoutes() {
 
                 is PartData.FileItem -> {
                     if (part.name == "imagenes") {
-                        val ext = part.originalFileName?.substringAfterLast('.') ?: "jpg"
-                        val fileName = "${UUID.randomUUID()}.$ext"
-                        val file = File(uploadDir, fileName)
+                        val ext = part.originalFileName
+                            ?.substringAfterLast('.', "jpg")
+                            ?.lowercase()
+
+                        val file = File(uploadDir, "${UUID.randomUUID()}.$ext")
 
                         part.streamProvider().use { input ->
                             file.outputStream().use { output ->
@@ -70,13 +72,12 @@ fun Route.formRoutes() {
             part.dispose()
         }
 
-        // 🔐 reCAPTCHA (IGUAL)
+        // 🔐 reCAPTCHA intacto
         if (recaptchaToken.isBlank() || !validarRecaptcha(recaptchaToken)) {
             call.respondText("❌ reCAPTCHA inválido", status = HttpStatusCode.Forbidden)
             return@post
         }
 
-        // ⬅️ NO REDIRIGE, devuelve OK
         call.respondText("OK")
     }
 }

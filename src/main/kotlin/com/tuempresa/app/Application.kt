@@ -8,6 +8,7 @@ import io.ktor.server.response.*
 import io.ktor.server.plugins.statuspages.*
 import io.ktor.http.*
 import io.ktor.server.http.content.*
+import java.io.File
 
 fun main() {
 
@@ -23,10 +24,9 @@ fun main() {
 
         routing {
 
-            // 🔥 SERVIR IMÁGENES SUBIDAS
+            // ✅ SERVIR CARPETA REAL (NO resources)
             static("/uploads") {
-                resources("static/uploads")
-                files("src/main/resources/static/uploads")
+                files(File("uploads"))
             }
 
             get("/404") {
