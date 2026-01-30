@@ -83,7 +83,7 @@ fun Route.formRoutes() {
 suspend fun validarRecaptcha(token: String): Boolean {
 
     val secret = System.getenv("RECAPTCHA_SECRET")
-        ?: "TU_SECRET_KEY_AQUI"
+        ?: "6LcBlFksAAAAANzwQxK7NNCdsAU1QNQIgMXMEJTT"
 
     val client = HttpClient(CIO)
 
