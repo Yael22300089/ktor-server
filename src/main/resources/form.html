@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="utf-8">
-    <title>Formulario con Carrusel</title>
+    <title>Formulario con Carrusel Persistente</title>
 
     <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 
@@ -54,9 +54,9 @@
         <input type="date" name="fecha" required>
 
         <label>Subir imágenes</label>
-        <input type="file" id="imagenes" name="imagenes" multiple accept="image/*">
+        <input type="file" name="imagenes" multiple accept="image/*">
 
-        <!-- 🔐 reCAPTCHA -->
+        <!-- 🔐 reCAPTCHA (SIN CAMBIOS) -->
         <div class="g-recaptcha"
              data-sitekey="6LcBlFksAAAAAPxIOh_Fsb4drTvSjvQ2Fcs4ZIly"></div>
 
@@ -65,31 +65,27 @@
 </div>
 
 <script>
-    const input = document.getElementById("imagenes");
     let fondos = [];
     let index = 0;
 
-    input.addEventListener("change", () => {
-        fondos = [];
-        index = 0;
-
-        [...input.files].forEach(file => {
-            const reader = new FileReader();
-            reader.onload = e => fondos.push(e.target.result);
-            reader.readAsDataURL(file);
+    // 🔄 Cargar imágenes guardadas del servidor
+    fetch('/imagenes')
+        .then(res => res.json())
+        .then(data => {
+            fondos = data;
+            iniciarCarrusel();
         });
 
-        setTimeout(() => {
-            if (fondos.length > 0) {
-                document.body.style.backgroundImage = `url(${fondos[0]})`;
+    function iniciarCarrusel() {
+        if (!fondos.length) return;
 
-                setInterval(() => {
-                    index = (index + 1) % fondos.length;
-                    document.body.style.backgroundImage = `url(${fondos[index]})`;
-                }, 4000);
-            }
-        }, 500);
-    });
+        document.body.style.backgroundImage = `url(${fondos[0]})`;
+
+        setInterval(() => {
+            index = (index + 1) % fondos.length;
+            document.body.style.backgroundImage = `url(${fondos[index]})`;
+        }, 4000);
+    }
 </script>
 
 </body>

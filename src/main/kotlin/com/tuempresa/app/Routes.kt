@@ -11,11 +11,14 @@ import io.ktor.client.engine.cio.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import java.io.File
-import java.time.LocalDate
 import java.util.*
 
 fun Route.formRoutes() {
 
+    val uploadDir = File("src/main/resources/static/uploads")
+    if (!uploadDir.exists()) uploadDir.mkdirs()
+
+    // 🟢 Formulario
     get("/") {
         call.respondText(
             this::class.java.getResource("/form.html")?.readText()
@@ -24,17 +27,23 @@ fun Route.formRoutes() {
         )
     }
 
+    // 🟢 Endpoint para listar imágenes del carrusel
+    get("/imagenes") {
+        val images = uploadDir.listFiles()
+            ?.filter { it.extension.lowercase() in listOf("jpg", "png", "jpeg", "webp") }
+            ?.map { "/static/uploads/${it.name}" }
+            ?: emptyList()
+
+        call.respond(images)
+    }
+
+    // 🟢 Envío del formulario + reCAPTCHA + subida
     post("/enviar") {
 
-        val uploadDir = File("src/main/resources/static/uploads")
-        if (!uploadDir.exists()) uploadDir.mkdirs()
-
         var recaptchaToken = ""
-
         val multipart = call.receiveMultipart()
 
         multipart.forEachPart { part ->
-
             when (part) {
 
                 is PartData.FormItem -> {
@@ -45,7 +54,9 @@ fun Route.formRoutes() {
 
                 is PartData.FileItem -> {
                     if (part.name == "imagenes") {
-                        val ext = part.originalFileName?.substringAfterLast('.') ?: "jpg"
+                        val ext = part.originalFileName
+                            ?.substringAfterLast('.') ?: "jpg"
+
                         val fileName = "${UUID.randomUUID()}.$ext"
                         val file = File(uploadDir, fileName)
 
@@ -59,11 +70,10 @@ fun Route.formRoutes() {
 
                 else -> {}
             }
-
             part.dispose()
         }
 
-        // 🔐 Validar reCAPTCHA
+        // 🔐 reCAPTCHA (NO MODIFICADO)
         if (recaptchaToken.isBlank() || !validarRecaptcha(recaptchaToken)) {
             call.respondText(
                 "❌ reCAPTCHA inválido",
@@ -73,10 +83,7 @@ fun Route.formRoutes() {
             return@post
         }
 
-        call.respondText(
-            this::class.java.getResource("/result.html")?.readText() ?: "OK",
-            ContentType.Text.Html
-        )
+        call.respondRedirect("/")
     }
 }
 
