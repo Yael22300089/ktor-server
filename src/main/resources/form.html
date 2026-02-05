@@ -87,7 +87,6 @@
     let index = 0;
     let intervalo = null;
 
-    /* 🔁 carrusel */
     function iniciarCarrusel() {
       if (!fondos.length) return;
 
@@ -102,7 +101,7 @@
       }, 4000);
     }
 
-    /* ✅ 1. IMÁGENES YA GUARDADAS */
+    /* ✅ 1. cargar imágenes guardadas */
     fetch('/imagenes')
       .then(r => r.json())
       .then(data => {
@@ -110,9 +109,8 @@
         iniciarCarrusel();
       });
 
-    /* ✅ 2. VISTA PREVIA AL SELECCIONAR */
+    /* ✅ 2. previsualizar SIN borrar las existentes */
     document.getElementById("imagenes").addEventListener("change", e => {
-      fondos = [];
       [...e.target.files].forEach(file => {
         const reader = new FileReader();
         reader.onload = ev => {
