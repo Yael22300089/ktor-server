@@ -81,19 +81,24 @@
         <button>Enviar</button>
     </form>
 </div>
-
 <script>
+    let imagenesServidor = [];
+    let imagenesPreview = [];
     let fondos = [];
     let index = 0;
     let intervalo = null;
 
-    function iniciarCarrusel() {
-      if (!fondos.length) return;
+    /* 🔁 iniciar carrusel */
+    function iniciarCarrusel(lista) {
+
+      if (!lista.length) return;
 
       if (intervalo) clearInterval(intervalo);
 
-      document.body.style.backgroundImage = `url(${fondos[0]})`;
+      fondos = lista;
       index = 0;
+
+      document.body.style.backgroundImage = `url(${fondos[0]})`;
 
       intervalo = setInterval(() => {
         index = (index + 1) % fondos.length;
@@ -101,27 +106,32 @@
       }, 4000);
     }
 
-    /* ✅ 1. cargar imágenes guardadas */
+    /* ✅ CARGAR IMÁGENES GUARDADAS */
     fetch('/imagenes')
       .then(r => r.json())
       .then(data => {
-        fondos = data;
-        iniciarCarrusel();
+        imagenesServidor = data;
+        iniciarCarrusel(imagenesServidor);
       });
 
-    /* ✅ 2. previsualizar SIN borrar las existentes */
+    /* ✅ VISTA PREVIA SIN BORRAR LAS GUARDADAS */
     document.getElementById("imagenes").addEventListener("change", e => {
+
+      imagenesPreview = [];
+
       [...e.target.files].forEach(file => {
         const reader = new FileReader();
+
         reader.onload = ev => {
-          fondos.push(ev.target.result);
-          iniciarCarrusel();
+          imagenesPreview.push(ev.target.result);
+          iniciarCarrusel(imagenesPreview);
         };
+
         reader.readAsDataURL(file);
       });
     });
 
-    /* 🚀 enviar */
+    /* 🚀 ENVIAR */
     document.getElementById("form").addEventListener("submit", async e => {
       e.preventDefault();
 
