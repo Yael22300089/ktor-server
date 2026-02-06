@@ -5,58 +5,93 @@
     <title>Formulario Moderno</title>
 
     <style>
-        body {
-          margin: 0;
-          min-height: 100vh;
-          background-size: cover;
-          background-position: center;
-          transition: background-image 1s ease-in-out;
-          font-family: 'Segoe UI', sans-serif;
-          display: flex;
-          align-items: center;
-          justify-content: center;
+
+        body{
+          margin:0;
+          min-height:100vh;
+          background-size:cover;
+          background-position:center;
+          transition:background-image 1s ease-in-out;
+          font-family:'Segoe UI',sans-serif;
         }
 
-        .overlay {
-          background: rgba(0,0,0,.55);
-          position: absolute;
-          inset: 0;
+        /* 🔥 MENU SUPERIOR */
+        .menu{
+          position:fixed;
+          top:0;
+          left:0;
+          right:0;
+          height:60px;
+          background:rgba(0,0,0,.75);
+          backdrop-filter:blur(8px);
+          display:flex;
+          align-items:center;
+          padding:0 20px;
+          z-index:5;
         }
 
-        .card {
-          position: relative;
-          background: white;
-          padding: 35px;
-          border-radius: 16px;
-          width: 420px;
-          box-shadow: 0 20px 40px rgba(0,0,0,.25);
-          z-index: 2;
+        .menu button{
+          background:none;
+          border:none;
+          color:white;
+          font-size:16px;
+          cursor:pointer;
+          margin-right:20px;
         }
 
-        input, button {
-          width: 100%;
-          padding: 12px;
-          margin-bottom: 12px;
-          border-radius: 8px;
-          border: 1px solid #ccc;
+        /* overlay oscuro */
+        .overlay{
+          position:fixed;
+          inset:0;
+          background:rgba(0,0,0,.55);
+          z-index:1;
         }
 
-        button {
-          background: linear-gradient(135deg,#667eea,#764ba2);
-          color: white;
-          border: none;
-          cursor: pointer;
+        /* CONTENEDOR INFERIOR */
+        .contenido{
+          margin-top:80px;
+          padding:40px;
+          display:flex;
+          justify-content:center;
+          z-index:2;
+          position:relative;
         }
 
-        #mensaje {
-          display: none;
-          background: #38a169;
-          color: white;
-          padding: 10px;
-          border-radius: 8px;
-          margin-bottom: 12px;
-          text-align: center;
+        /* CARD FORM */
+        .card{
+          background:white;
+          padding:35px;
+          border-radius:16px;
+          width:420px;
+          box-shadow:0 20px 40px rgba(0,0,0,.25);
+          display:none;
         }
+
+        input,button{
+          width:100%;
+          padding:12px;
+          margin-bottom:12px;
+          border-radius:8px;
+          border:1px solid #ccc;
+        }
+
+        button{
+          background:linear-gradient(135deg,#667eea,#764ba2);
+          color:white;
+          border:none;
+          cursor:pointer;
+        }
+
+        #mensaje{
+          display:none;
+          background:#38a169;
+          color:white;
+          padding:10px;
+          border-radius:8px;
+          margin-bottom:12px;
+          text-align:center;
+        }
+
     </style>
 </head>
 
@@ -64,87 +99,107 @@
 
 <div class="overlay"></div>
 
-<div class="card">
-    <h2>Registro</h2>
-
-    <div id="mensaje">✅ Formulario enviado</div>
-
-    <form id="form" enctype="multipart/form-data">
-        <input name="nombre" placeholder="Nombre" required>
-        <input name="edad" placeholder="Edad" required>
-        <input name="correo" placeholder="Correo" required>
-        <input name="telefono" placeholder="Teléfono" required>
-        <input type="date" name="fecha" required>
-
-        <input type="file" id="imagenes" name="imagenes" multiple accept="image/*">
-
-        <button>Enviar</button>
-    </form>
+<!-- 🔥 MENU -->
+<div class="menu">
+    <button onclick="mostrarFormulario()">📋 Formulario</button>
 </div>
+
+<!-- CONTENIDO ABAJO -->
+<div class="contenido">
+
+    <div class="card" id="cardForm">
+
+        <h2>Registro</h2>
+
+        <div id="mensaje">✅ Formulario enviado</div>
+
+        <form id="form" enctype="multipart/form-data">
+            <input name="nombre" placeholder="Nombre" required>
+            <input name="edad" placeholder="Edad" required>
+            <input name="correo" placeholder="Correo" required>
+            <input name="telefono" placeholder="Teléfono" required>
+            <input type="date" name="fecha" required>
+
+            <input type="file" id="imagenes" name="imagenes" multiple accept="image/*">
+
+            <button>Enviar</button>
+        </form>
+
+    </div>
+
+</div>
+
 <script>
-    let imagenesServidor = [];
-    let imagenesPreview = [];
-    let fondos = [];
-    let index = 0;
-    let intervalo = null;
 
-    /* 🔁 iniciar carrusel */
-    function iniciarCarrusel(lista) {
-
-      if (!lista.length) return;
-
-      if (intervalo) clearInterval(intervalo);
-
-      fondos = lista;
-      index = 0;
-
-      document.body.style.backgroundImage = `url(${fondos[0]})`;
-
-      intervalo = setInterval(() => {
-        index = (index + 1) % fondos.length;
-        document.body.style.backgroundImage = `url(${fondos[index]})`;
-      }, 4000);
+    function mostrarFormulario(){
+      document.getElementById("cardForm").style.display="block";
     }
 
-    /* ✅ CARGAR IMÁGENES GUARDADAS */
+    /* ============================
+       🔥 TU CARRUSEL (SIN CAMBIOS)
+    ============================ */
+
+    let imagenesServidor=[];
+    let imagenesPreview=[];
+    let fondos=[];
+    let index=0;
+    let intervalo=null;
+
+    function iniciarCarrusel(lista){
+
+      if(!lista.length)return;
+
+      if(intervalo)clearInterval(intervalo);
+
+      fondos=lista;
+      index=0;
+
+      document.body.style.backgroundImage=`url(${fondos[0]})`;
+
+      intervalo=setInterval(()=>{
+        index=(index+1)%fondos.length;
+        document.body.style.backgroundImage=`url(${fondos[index]})`;
+      },4000);
+    }
+
     fetch('/imagenes')
-      .then(r => r.json())
-      .then(data => {
-        imagenesServidor = data;
-        iniciarCarrusel(imagenesServidor);
-      });
+    .then(r=>r.json())
+    .then(data=>{
+      imagenesServidor=data;
+      iniciarCarrusel(imagenesServidor);
+    });
 
-    /* ✅ VISTA PREVIA SIN BORRAR LAS GUARDADAS */
-    document.getElementById("imagenes").addEventListener("change", e => {
+    document.getElementById("imagenes").addEventListener("change",e=>{
 
-      imagenesPreview = [];
+      imagenesPreview=[];
 
-      [...e.target.files].forEach(file => {
-        const reader = new FileReader();
+      [...e.target.files].forEach(file=>{
+        const reader=new FileReader();
 
-        reader.onload = ev => {
+        reader.onload=ev=>{
           imagenesPreview.push(ev.target.result);
           iniciarCarrusel(imagenesPreview);
         };
 
         reader.readAsDataURL(file);
       });
+
     });
 
-    /* 🚀 ENVIAR */
-    document.getElementById("form").addEventListener("submit", async e => {
+    document.getElementById("form").addEventListener("submit",async e=>{
       e.preventDefault();
 
-      const res = await fetch("/enviar", {
-        method: "POST",
-        body: new FormData(e.target)
+      const res=await fetch("/enviar",{
+        method:"POST",
+        body:new FormData(e.target)
       });
 
-      if (res.ok) {
-        document.getElementById("mensaje").style.display = "block";
-        setTimeout(() => location.reload(), 1500);
+      if(res.ok){
+        document.getElementById("mensaje").style.display="block";
+        setTimeout(()=>location.reload(),1500);
       }
     });
+
 </script>
 
 </body>
