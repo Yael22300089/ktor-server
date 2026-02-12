@@ -29,4 +29,7 @@ dependencies {
 
     // Logging
     implementation("ch.qos.logback:logback-classic:1.4.14")
+
+    implementation("com.microsoft.sqlserver:mssql-jdbc:12.6.1.jre11")
+    implementation("com.zaxxer:HikariCP:5.1.0")
 }

@@ -33,26 +33,73 @@ fun Route.formRoutes() {
 
     post("/enviar") {
 
+        var nombre = ""
+        var edad = ""
+        var correo = ""
+        var telefono = ""
+        var fecha = ""
+
         val multipart = call.receiveMultipart()
 
         multipart.forEachPart { part ->
-            if (part is PartData.FileItem && part.name == "imagenes") {
 
-                val ext = part.originalFileName
-                    ?.substringAfterLast('.', "jpg")
-                    ?.lowercase()
+            when (part) {
 
-                val file = File(uploadDir, "${UUID.randomUUID()}.$ext")
+                is PartData.FormItem -> {
 
-                part.streamProvider().use { input ->
-                    file.outputStream().use { output ->
-                        input.copyTo(output)
+                    when(part.name){
+                        "nombre" -> nombre = part.value
+                        "edad" -> edad = part.value
+                        "correo" -> correo = part.value
+                        "telefono" -> telefono = part.value
+                        "fecha" -> fecha = part.value
                     }
                 }
+
+                is PartData.FileItem -> {
+                    if (part.name == "imagenes") {
+
+                        val ext = part.originalFileName
+                            ?.substringAfterLast('.', "jpg")
+                            ?.lowercase()
+
+                        val file = File(uploadDir, "${UUID.randomUUID()}.$ext")
+
+                        part.streamProvider().use { input ->
+                            file.outputStream().use { output ->
+                                input.copyTo(output)
+                            }
+                        }
+                    }
+                }
+
+                else -> {}
             }
+
             part.dispose()
+        }
+
+        // ✅ INSERTAR EN BASE DE DATOS (SIN IMAGEN)
+        Database.getConnection().use { conn ->
+
+            val sql = """
+            INSERT INTO registros(nombre,edad,correo,telefono,fecha)
+            VALUES(?,?,?,?,?)
+        """
+
+            conn.prepareStatement(sql).use { ps ->
+
+                ps.setString(1, nombre)
+                ps.setInt(2, edad.toInt())
+                ps.setString(3, correo)
+                ps.setString(4, telefono)
+                ps.setDate(5, java.sql.Date.valueOf(fecha))
+
+                ps.executeUpdate()
+            }
         }
 
         call.respondText("OK")
     }
+
 }
