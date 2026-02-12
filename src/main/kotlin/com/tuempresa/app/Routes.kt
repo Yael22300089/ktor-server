@@ -51,11 +51,11 @@ fun Route.formRoutes() {
 
                 is PartData.FormItem -> {
                     when(part.name){
-                        "nombre" -> nombre = part.value
-                        "edad" -> edad = part.value
-                        "correo" -> correo = part.value
-                        "telefono" -> telefono = part.value
-                        "fecha" -> fecha = part.value
+                        "nombre" -> nombre = part.value.trim()
+                        "edad" -> edad = part.value.trim()
+                        "correo" -> correo = part.value.trim()
+                        "telefono" -> telefono = part.value.trim()
+                        "fecha" -> fecha = part.value.trim()
                         "g-recaptcha-response" -> recaptchaToken = part.value
                     }
                 }
@@ -83,7 +83,46 @@ fun Route.formRoutes() {
             part.dispose()
         }
 
-        // 🔐 VALIDAR RECAPTCHA
+        /* =============================
+           ✅ VALIDACIONES PROFESIONALES
+           ============================= */
+
+        val regexNombre = Regex("^[a-zA-ZáéíóúÁÉÍÓÚñÑ ]+$")
+        val regexEdad = Regex("^\\d+$")
+        val regexCorreo = Regex("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\$")
+        val regexTelefono = Regex("^\\d{10}\$")
+
+        if (!regexNombre.matches(nombre)) {
+            call.respond(HttpStatusCode.BadRequest, "Nombre inválido")
+            return@post
+        }
+
+        if (!regexEdad.matches(edad)) {
+            call.respond(HttpStatusCode.BadRequest, "Edad inválida")
+            return@post
+        }
+
+        if (!regexCorreo.matches(correo)) {
+            call.respond(HttpStatusCode.BadRequest, "Correo inválido")
+            return@post
+        }
+
+        if (!regexTelefono.matches(telefono)) {
+            call.respond(HttpStatusCode.BadRequest, "Teléfono debe tener 10 dígitos")
+            return@post
+        }
+
+        try {
+            java.sql.Date.valueOf(fecha)
+        } catch (e: Exception) {
+            call.respond(HttpStatusCode.BadRequest, "Fecha inválida")
+            return@post
+        }
+
+        /* =============================
+           🔐 VALIDAR RECAPTCHA
+           ============================= */
+
         val secretKey = "6LezqGgsAAAAAK4O5uCsHMNRM9LmAvSwmyIut-pV"
 
         val url = URL("https://www.google.com/recaptcha/api/siteverify")
@@ -105,13 +144,16 @@ fun Route.formRoutes() {
             return@post
         }
 
-        // ✅ INSERT BD (SIN IMAGEN)
+        /* =============================
+           ✅ INSERTAR BD
+           ============================= */
+
         Database.getConnection().use { connDb ->
 
             val sql = """
-                INSERT INTO registros(nombre,edad,correo,telefono,fecha)
-                VALUES(?,?,?,?,?)
-            """
+            INSERT INTO registros(nombre,edad,correo,telefono,fecha)
+            VALUES(?,?,?,?,?)
+        """
 
             connDb.prepareStatement(sql).use { ps ->
 
