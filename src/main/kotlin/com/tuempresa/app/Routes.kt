@@ -8,6 +8,9 @@ import io.ktor.http.*
 import io.ktor.http.content.*
 import java.io.File
 import java.util.*
+import java.net.URL
+import javax.net.ssl.HttpsURLConnection
+import org.json.JSONObject
 
 fun Route.formRoutes() {
 
@@ -21,7 +24,7 @@ fun Route.formRoutes() {
         )
     }
 
-    // 📸 imágenes para el carrusel
+    // 📸 imágenes para carrusel
     get("/imagenes") {
         val images = uploadDir.listFiles()
             ?.filter { it.extension.lowercase() in listOf("jpg","jpeg","png","webp") }
@@ -38,6 +41,7 @@ fun Route.formRoutes() {
         var correo = ""
         var telefono = ""
         var fecha = ""
+        var recaptchaToken = ""
 
         val multipart = call.receiveMultipart()
 
@@ -46,13 +50,13 @@ fun Route.formRoutes() {
             when (part) {
 
                 is PartData.FormItem -> {
-
                     when(part.name){
                         "nombre" -> nombre = part.value
                         "edad" -> edad = part.value
                         "correo" -> correo = part.value
                         "telefono" -> telefono = part.value
                         "fecha" -> fecha = part.value
+                        "g-recaptcha-response" -> recaptchaToken = part.value
                     }
                 }
 
@@ -79,15 +83,37 @@ fun Route.formRoutes() {
             part.dispose()
         }
 
-        // ✅ INSERTAR EN BASE DE DATOS (SIN IMAGEN)
-        Database.getConnection().use { conn ->
+        // 🔐 VALIDAR RECAPTCHA
+        val secretKey = "6LezqGgsAAAAAK4O5uCsHMNRM9LmAvSwmyIut-pV"
+
+        val url = URL("https://www.google.com/recaptcha/api/siteverify")
+        val params = "secret=$secretKey&response=$recaptchaToken"
+
+        val conn = url.openConnection() as HttpsURLConnection
+        conn.requestMethod = "POST"
+        conn.doOutput = true
+
+        conn.outputStream.use {
+            it.write(params.toByteArray())
+        }
+
+        val response = conn.inputStream.bufferedReader().readText()
+        val json = JSONObject(response)
+
+        if (!json.getBoolean("success")) {
+            call.respond(HttpStatusCode.Forbidden, "Captcha inválido")
+            return@post
+        }
+
+        // ✅ INSERT BD (SIN IMAGEN)
+        Database.getConnection().use { connDb ->
 
             val sql = """
-            INSERT INTO registros(nombre,edad,correo,telefono,fecha)
-            VALUES(?,?,?,?,?)
-        """
+                INSERT INTO registros(nombre,edad,correo,telefono,fecha)
+                VALUES(?,?,?,?,?)
+            """
 
-            conn.prepareStatement(sql).use { ps ->
+            connDb.prepareStatement(sql).use { ps ->
 
                 ps.setString(1, nombre)
                 ps.setInt(2, edad.toInt())
@@ -101,5 +127,4 @@ fun Route.formRoutes() {
 
         call.respondText("OK")
     }
-
 }

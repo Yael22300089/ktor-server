@@ -24,7 +24,6 @@ fun main() {
 
         routing {
 
-            // 📂 carpeta REAL donde se guardan imágenes
             static("/uploads") {
                 files(File("uploads"))
             }

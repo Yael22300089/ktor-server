@@ -32,4 +32,7 @@ dependencies {
 
     implementation("com.microsoft.sqlserver:mssql-jdbc:12.6.1.jre11")
     implementation("com.zaxxer:HikariCP:5.1.0")
+
+    implementation("org.json:json:20240303")
+
 }
