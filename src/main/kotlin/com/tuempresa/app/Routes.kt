@@ -10,6 +10,7 @@ import java.io.File
 import java.util.*
 import java.net.URL
 import javax.net.ssl.HttpsURLConnection
+import java.io.OutputStreamWriter
 import org.json.JSONObject
 
 fun Route.formRoutes() {
@@ -24,7 +25,7 @@ fun Route.formRoutes() {
         )
     }
 
-    // 📸 imágenes para carrusel
+    // 📸 imágenes para el carrusel
     get("/imagenes") {
         val images = uploadDir.listFiles()
             ?.filter { it.extension.lowercase() in listOf("jpg","jpeg","png","webp") }
@@ -50,6 +51,7 @@ fun Route.formRoutes() {
             when (part) {
 
                 is PartData.FormItem -> {
+
                     when(part.name){
                         "nombre" -> nombre = part.value
                         "edad" -> edad = part.value
@@ -83,37 +85,46 @@ fun Route.formRoutes() {
             part.dispose()
         }
 
-        // 🔐 VALIDAR RECAPTCHA
-        val secretKey = "6LezqGgsAAAAAK4O5uCsHMNRM9LmAvSwmyIut-pV"
+        // ==========================
+        // 🔒 VALIDAR RECAPTCHA
+        // ==========================
+
+        val secretKey = "TU_SECRET_KEY"
 
         val url = URL("https://www.google.com/recaptcha/api/siteverify")
-        val params = "secret=$secretKey&response=$recaptchaToken"
-
         val conn = url.openConnection() as HttpsURLConnection
+
         conn.requestMethod = "POST"
         conn.doOutput = true
 
-        conn.outputStream.use {
-            it.write(params.toByteArray())
+        val params = "secret=$secretKey&response=$recaptchaToken"
+
+        OutputStreamWriter(conn.outputStream).use {
+            it.write(params)
         }
 
         val response = conn.inputStream.bufferedReader().readText()
         val json = JSONObject(response)
 
-        if (!json.getBoolean("success")) {
-            call.respond(HttpStatusCode.Forbidden, "Captcha inválido")
+        val success = json.getBoolean("success")
+
+        if(!success){
+            call.respond(HttpStatusCode.Forbidden,"Captcha inválido")
             return@post
         }
 
-        // ✅ INSERT BD (SIN IMAGEN)
-        Database.getConnection().use { connDb ->
+        // ==========================
+        // ✅ INSERTAR EN BD
+        // ==========================
+
+        Database.getConnection().use { connDB ->
 
             val sql = """
-                INSERT INTO registros(nombre,edad,correo,telefono,fecha)
-                VALUES(?,?,?,?,?)
-            """
+            INSERT INTO registros(nombre,edad,correo,telefono,fecha)
+            VALUES(?,?,?,?,?)
+        """
 
-            connDb.prepareStatement(sql).use { ps ->
+            connDB.prepareStatement(sql).use { ps ->
 
                 ps.setString(1, nombre)
                 ps.setInt(2, edad.toInt())

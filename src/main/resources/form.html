@@ -15,7 +15,6 @@
         transition:background-image 1s ease-in-out;
         font-family:'Segoe UI',sans-serif;
         }
-
         .menu{
         position:fixed;
         top:0;
@@ -23,28 +22,34 @@
         right:0;
         height:60px;
         background:rgba(0,0,0,.75);
+        backdrop-filter:blur(8px);
         display:flex;
         align-items:center;
         padding:0 20px;
         z-index:5;
         }
-
+        .menu button{
+        background:none;
+        border:none;
+        color:white;
+        font-size:16px;
+        cursor:pointer;
+        margin-right:20px;
+        }
         .overlay{
         position:fixed;
         inset:0;
         background:rgba(0,0,0,.55);
         z-index:1;
         }
-
         .contenido{
         margin-top:80px;
         padding:40px;
         display:flex;
         justify-content:center;
-        position:relative;
         z-index:2;
+        position:relative;
         }
-
         .card{
         background:white;
         padding:35px;
@@ -53,7 +58,6 @@
         box-shadow:0 20px 40px rgba(0,0,0,.25);
         display:none;
         }
-
         input,button{
         width:100%;
         padding:12px;
@@ -61,12 +65,20 @@
         border-radius:8px;
         border:1px solid #ccc;
         }
-
         button{
         background:linear-gradient(135deg,#667eea,#764ba2);
         color:white;
         border:none;
         cursor:pointer;
+        }
+        #mensaje{
+        display:none;
+        background:#38a169;
+        color:white;
+        padding:10px;
+        border-radius:8px;
+        margin-bottom:12px;
+        text-align:center;
         }
     </style>
 </head>
@@ -77,12 +89,15 @@
 
 <div class="menu">
     <button onclick="mostrarFormulario()">📋 Formulario</button>
+    <button onclick="mostrarFormu()"> Prueba </button>
 </div>
 
 <div class="contenido">
     <div class="card" id="cardForm">
 
         <h2>Registro</h2>
+
+        <div id="mensaje">✅ Formulario enviado</div>
 
         <form id="form" enctype="multipart/form-data">
 
@@ -94,6 +109,7 @@
 
             <input type="file" id="imagenes" name="imagenes" multiple accept="image/*">
 
+            <!-- 🔒 RECAPTCHA AGREGADO -->
             <div class="g-recaptcha"
                  data-sitekey="6LezqGgsAAAAAHS8EPhxOi1WRM1YZBdV4IPMzxm8">
             </div>
@@ -101,6 +117,7 @@
             <button>Enviar</button>
 
         </form>
+
     </div>
 </div>
 
@@ -110,42 +127,67 @@
     document.getElementById("cardForm").style.display="block";
     }
 
-    let fondos=[]
-    let index=0
-    let intervalo=null
+    let imagenesServidor=[];
+    let imagenesPreview=[];
+    let fondos=[];
+    let index=0;
+    let intervalo=null;
 
     function iniciarCarrusel(lista){
-    if(!lista.length)return
 
-    if(intervalo)clearInterval(intervalo)
+    if(!lista.length)return;
 
-    fondos=lista
-    index=0
+    if(intervalo)clearInterval(intervalo);
 
-    document.body.style.backgroundImage=`url(${fondos[0]})`
+    fondos=lista;
+    index=0;
+
+    document.body.style.backgroundImage=`url(${fondos[0]})`;
 
     intervalo=setInterval(()=>{
-    index=(index+1)%fondos.length
-    document.body.style.backgroundImage=`url(${fondos[index]})`
-    },4000)
+    index=(index+1)%fondos.length;
+    document.body.style.backgroundImage=`url(${fondos[index]})`;
+    },4000);
     }
 
     fetch('/imagenes')
     .then(r=>r.json())
-    .then(data=>iniciarCarrusel(data))
+    .then(data=>{
+    imagenesServidor=data;
+    iniciarCarrusel(imagenesServidor);
+    });
+
+    document.getElementById("imagenes").addEventListener("change",e=>{
+
+    imagenesPreview=[];
+
+    [...e.target.files].forEach(file=>{
+    const reader=new FileReader();
+
+    reader.onload=ev=>{
+    imagenesPreview.push(ev.target.result);
+    iniciarCarrusel(imagenesPreview);
+    };
+
+    reader.readAsDataURL(file);
+    });
+
+    });
 
     document.getElementById("form").addEventListener("submit",async e=>{
-    e.preventDefault()
+    e.preventDefault();
 
     const res=await fetch("/enviar",{
     method:"POST",
     body:new FormData(e.target)
-    })
+    });
 
     if(res.ok){
-    location.reload()
+    document.getElementById("mensaje").style.display="block";
+    setTimeout(()=>location.reload(),1500);
     }
-    })
+    });
+
 </script>
 
 </body>
