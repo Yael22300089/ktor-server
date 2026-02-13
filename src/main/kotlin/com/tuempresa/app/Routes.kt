@@ -25,8 +25,9 @@ fun Route.formRoutes() {
         )
     }
 
-    // 📸 imágenes para el carrusel
+    // 🔥 LISTA DE IMÁGENES PARA EL CARRUSEL
     get("/imagenes") {
+
         val images = uploadDir.listFiles()
             ?.filter { it.extension.lowercase() in listOf("jpg","jpeg","png","webp") }
             ?.map { "/uploads/${it.name}" }
@@ -51,7 +52,6 @@ fun Route.formRoutes() {
             when (part) {
 
                 is PartData.FormItem -> {
-
                     when(part.name){
                         "nombre" -> nombre = part.value
                         "edad" -> edad = part.value
@@ -63,6 +63,7 @@ fun Route.formRoutes() {
                 }
 
                 is PartData.FileItem -> {
+
                     if (part.name == "imagenes") {
 
                         val ext = part.originalFileName
@@ -85,12 +86,13 @@ fun Route.formRoutes() {
             part.dispose()
         }
 
+        println("TOKEN CAPTCHA: $recaptchaToken")
+
         // ==========================
         // 🔒 VALIDAR RECAPTCHA
         // ==========================
 
         val secretKey = "6LezqGgsAAAAAK4O5uCsHMNRM9LmAvSwmyIut-pV"
-
 
         val url = URL("https://www.google.com/recaptcha/api/siteverify")
         val conn = url.openConnection() as HttpsURLConnection
@@ -115,7 +117,7 @@ fun Route.formRoutes() {
         }
 
         // ==========================
-        // ✅ INSERTAR EN BD
+        // ✅ GUARDAR EN BD
         // ==========================
 
         Database.getConnection().use { connDB ->
@@ -123,7 +125,7 @@ fun Route.formRoutes() {
             val sql = """
             INSERT INTO registros(nombre,edad,correo,telefono,fecha)
             VALUES(?,?,?,?,?)
-        """
+            """
 
             connDB.prepareStatement(sql).use { ps ->
 
@@ -140,4 +142,3 @@ fun Route.formRoutes() {
         call.respondText("OK")
     }
 }
-

@@ -24,6 +24,7 @@ fun main() {
 
         routing {
 
+            // 👇 SERVIR IMÁGENES DEL CARRUSEL
             static("/uploads") {
                 files(File("uploads"))
             }

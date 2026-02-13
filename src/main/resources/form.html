@@ -22,33 +22,15 @@
         right:0;
         height:60px;
         background:rgba(0,0,0,.75);
-        backdrop-filter:blur(8px);
         display:flex;
         align-items:center;
         padding:0 20px;
-        z-index:5;
-        }
-        .menu button{
-        background:none;
-        border:none;
-        color:white;
-        font-size:16px;
-        cursor:pointer;
-        margin-right:20px;
-        }
-        .overlay{
-        position:fixed;
-        inset:0;
-        background:rgba(0,0,0,.55);
-        z-index:1;
         }
         .contenido{
         margin-top:80px;
         padding:40px;
         display:flex;
         justify-content:center;
-        z-index:2;
-        position:relative;
         }
         .card{
         background:white;
@@ -56,7 +38,7 @@
         border-radius:16px;
         width:420px;
         box-shadow:0 20px 40px rgba(0,0,0,.25);
-        display:none;
+        display:block;
         }
         input,button{
         width:100%;
@@ -85,15 +67,8 @@
 
 <body>
 
-<div class="overlay"></div>
-
-<div class="menu">
-    <button onclick="mostrarFormulario()">📋 Formulario</button>
-    <button onclick="mostrarFormu()"> Prueba </button>
-</div>
-
 <div class="contenido">
-    <div class="card" id="cardForm">
+    <div class="card">
 
         <h2>Registro</h2>
 
@@ -109,13 +84,10 @@
 
             <input type="file" id="imagenes" name="imagenes" multiple accept="image/*">
 
-            <!-- 🔒 RECAPTCHA AGREGADO -->
             <div class="g-recaptcha"
-                 data-sitekey="6LezqGgsAAAAAHS8EPhxOi1WRM1YZBdV4IPMzxm8">
-            </div>
+                 data-sitekey="6LezqGgsAAAAAHS8EPhxOi1WRM1YZBdV4IPMzxm8"></div>
 
             <button type="submit">Enviar</button>
-
 
         </form>
 
@@ -124,12 +96,6 @@
 
 <script>
 
-    function mostrarFormulario(){
-    document.getElementById("cardForm").style.display="block";
-    }
-
-    let imagenesServidor=[];
-    let imagenesPreview=[];
     let fondos=[];
     let index=0;
     let intervalo=null;
@@ -154,44 +120,37 @@
     fetch('/imagenes')
     .then(r=>r.json())
     .then(data=>{
-    imagenesServidor=data;
-    iniciarCarrusel(imagenesServidor);
-    });
-
-    document.getElementById("imagenes").addEventListener("change",e=>{
-
-    imagenesPreview=[];
-
-    [...e.target.files].forEach(file=>{
-    const reader=new FileReader();
-
-    reader.onload=ev=>{
-    imagenesPreview.push(ev.target.result);
-    iniciarCarrusel(imagenesPreview);
-    };
-
-    reader.readAsDataURL(file);
-    });
-
+    iniciarCarrusel(data);
     });
 
     document.getElementById("form").addEventListener("submit",async e=>{
+
     e.preventDefault();
+
+    const btn=e.target.querySelector("button");
+    btn.disabled=true;
 
     const res=await fetch("/enviar",{
     method:"POST",
     body:new FormData(e.target)
     });
 
+    const texto=await res.text();
+
     if(res.ok){
+
     document.getElementById("mensaje").style.display="block";
+
     setTimeout(()=>location.reload(),1500);
+
+    }else{
+
+    alert("Error del servidor:\n"+texto);
+    btn.disabled=false;
+
     }
     });
-
 </script>
 
 </body>
 </html>
-
-
