@@ -89,7 +89,8 @@ fun Route.formRoutes() {
         // 🔒 VALIDAR RECAPTCHA
         // ==========================
 
-        val secretKey = "TU_SECRET_KEY"
+        val secretKey = "6LezqGgsAAAAAK4O5uCsHMNRM9LmAvSwmyIut-pV"
+
 
         val url = URL("https://www.google.com/recaptcha/api/siteverify")
         val conn = url.openConnection() as HttpsURLConnection
@@ -139,3 +140,4 @@ fun Route.formRoutes() {
         call.respondText("OK")
     }
 }
+
